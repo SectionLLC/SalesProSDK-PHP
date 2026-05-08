@@ -1,26 +1,45 @@
 <?php
 
-// ============================================================================
-// FILE: src/Services/FieldForceService.php
-// ============================================================================
+declare(strict_types=1);
 
-class FieldForceService implements ServiceInterface
+namespace ITechSection\SalesPro\Services;
+
+use ITechSection\SalesPro\Http\ActionResponse;
+use ITechSection\SalesPro\Http\ApiListResponse;
+use ITechSection\SalesPro\Http\ApiResponse;
+// ── Field Force ───────────────────────────────────────────────────────────────
+
+/**
+ * FieldForceService — Field sales visit tracking.
+ *
+ * Docs: connector/api/field-force
+ */
+class FieldForceService extends AbstractService
 {
-    use RequestTrait, ResponseTrait;
-    private SalesPro $client;
-    
-    public function __construct(SalesPro $client) { $this->client = $client; }
-    public function getClient(): SalesPro { return $this->client; }
-    
-    /** List visits */
-    public function listVisits(array $filters = []): array { return $this->get('/connector/api/visits', $filters); }
-    
-    /** Create visit */
-    public function createVisit(array $data): array { return $this->post('/connector/api/visits', $data); }
-    
-    /** Update visit status */
-    public function updateStatus(int $visitId, string $status): array
+    public function listVisits(array $params = []): ApiListResponse
     {
-        return $this->put("/connector/api/visits/{$visitId}/status", $visitId, ['status' => $status]);
+        return $this->getList('connector/api/field-force', $this->compact($params));
+    }
+
+    /**
+     * @param array{
+     *   contact_id: int,
+     *   visit_date: string,
+     *   note?: string,
+     *   latitude?: string,
+     *   longitude?: string
+     * } $data
+     */
+    public function createVisit(array $data): ApiResponse
+    {
+        return $this->postSingle('connector/api/field-force/create', $data);
+    }
+
+    /**
+     * @param array{status: string, note?: string} $data
+     */
+    public function updateVisitStatus(int $id, array $data): ActionResponse
+    {
+        return $this->postAction("connector/api/field-force/update-visit-status/{$id}", $data);
     }
 }

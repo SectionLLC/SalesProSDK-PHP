@@ -1,22 +1,36 @@
 <?php
 
-// ============================================================================
-// FILE: src/Exceptions/ValidationException.php
-// ============================================================================
+declare(strict_types=1);
 
-class ValidationException extends ApiException
+namespace ITechSection\SalesPro\Exceptions;
+// ── Validation ────────────────────────────────────────────────────────────────
+
+/**
+ * Thrown when the API returns a 422 Unprocessable Entity response.
+ */
+class ValidationException extends SalesProException
 {
-    /** @var array Validation errors */
-    private array $errors = [];
-    
-    public function __construct(string $message = 'Validation Failed', int $code = 422, array $errors = [])
+    /** @var array<string, string[]> */
+    private array $errors;
+
+    /**
+     * @param array<string, string[]> $errors
+     */
+    public function __construct(array $errors, string $message = 'Validation failed.')
     {
-        parent::__construct($message, $code);
         $this->errors = $errors;
-        $this->setHttpStatus(422);
-        $this->setDetails(['validation_errors' => $errors]);
-        $this->setUserMessage('The data provided is invalid');
+        parent::__construct($message, ['errors' => $errors], 422);
     }
-    
-    public function getErrors(): array { return $this->errors; }
+
+    /** @return array<string, string[]> */
+    public function getErrors(): array
+    {
+        return $this->errors;
+    }
+
+    /** Returns a flat list of all error messages across all fields. */
+    public function getMessages(): array
+    {
+        return array_merge(...array_values($this->errors));
+    }
 }

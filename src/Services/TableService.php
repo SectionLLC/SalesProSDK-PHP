@@ -1,20 +1,28 @@
 <?php
 
-// ============================================================================
-// FILE: src/Services/TableService.php
-// ============================================================================
+declare(strict_types=1);
 
-class TableService implements ServiceInterface
+namespace ITechSection\SalesPro\Services;
+
+use ITechSection\SalesPro\Http\ActionResponse;
+use ITechSection\SalesPro\Http\ApiListResponse;
+use ITechSection\SalesPro\Http\ApiResponse;
+// ── Table ─────────────────────────────────────────────────────────────────────
+
+/**
+ * TableService — Restaurant / service table management.
+ *
+ * Docs: connector/api/table
+ */
+class TableService extends AbstractService
 {
-    use RequestTrait, ResponseTrait;
-    private SalesPro $client;
-    
-    public function __construct(SalesPro $client) { $this->client = $client; }
-    public function getClient(): SalesPro { return $this->client; }
-    
-    /** List tables */
-    public function list(): array { return $this->get('/connector/api/tables'); }
-    
-    /** Get table by ID */
-    public function find(int $tableId): array { return $this->get("/connector/api/tables/{$tableId}"); }
+    public function list(): ApiListResponse
+    {
+        return $this->getList('connector/api/table', [], true);
+    }
+
+    public function get(int $id): ApiResponse
+    {
+        return $this->getSingle("connector/api/table/{$id}", [], true);
+    }
 }

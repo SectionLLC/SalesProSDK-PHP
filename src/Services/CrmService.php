@@ -1,35 +1,83 @@
 <?php
 
-// ============================================================================
-// FILE: src/Services/CrmService.php
-// ============================================================================
+declare(strict_types=1);
 
-class CrmService implements ServiceInterface
+namespace ITechSection\SalesPro\Services;
+
+use ITechSection\SalesPro\Http\ActionResponse;
+use ITechSection\SalesPro\Http\ApiListResponse;
+use ITechSection\SalesPro\Http\ApiResponse;
+// ── CRM ───────────────────────────────────────────────────────────────────────
+
+/**
+ * CrmService — Follow-ups, leads, and call logs.
+ *
+ * Docs: connector/api/crm-follow-ups
+ *       connector/api/crm-leads
+ *       connector/api/crm-call-logs
+ *       connector/api/crm-follow-up-resources
+ */
+class CrmService extends AbstractService
 {
-    use RequestTrait, ResponseTrait;
-    private SalesPro $client;
-    
-    public function __construct(SalesPro $client) { $this->client = $client; }
-    public function getClient(): SalesPro { return $this->client; }
-    
-    /** List follow-ups */
-    public function listFollowUps(array $filters = []): PaginationResult { return PaginationResult::fromResponse($this->get('/connector/api/follow-ups', $filters)); }
-    
-    /** Add follow-up */
-    public function addFollowUp(array $data): array { return $this->post('/connector/api/follow-ups', $data); }
-    
-    /** Get follow-up by ID */
-    public function getFollowUp(int $id): array { return $this->get("/connector/api/follow-ups/{$id}"); }
-    
-    /** Update follow-up */
-    public function updateFollowUp(int $id, array $data): array { $this->put("/connector/api/follow-ups/{$id}", $id, $data); return $data; }
-    
-    /** Get resources */
-    public function getResources(): array { return $this->get('/connector/api/follow-up-resources'); }
-    
-    /** List leads */
-    public function listLeads(array $filters = []): array { return $this->get('/connector/api/leads', $filters); }
-    
-    /** Save call log */
-    public function saveCallLog(array $data): array { return $this->post('/connector/api/contact/call-log', $data); }
+    // Follow-ups
+
+    public function listFollowUps(array $params = []): ApiListResponse
+    {
+        return $this->getList('connector/api/crm-follow-ups', $this->compact($params));
+    }
+
+    /**
+     * @param array{
+     *   contact_id?: int,
+     *   lead_id?: int,
+     *   follow_up_date: string,
+     *   follow_up_type?: string,
+     *   note?: string,
+     *   assigned_to?: int
+     * } $data
+     */
+    public function addFollowUp(array $data): ApiResponse
+    {
+        return $this->postSingle('connector/api/crm-follow-ups', $data);
+    }
+
+    public function getFollowUp(int $id): ApiResponse
+    {
+        return $this->getSingle("connector/api/crm-follow-ups/{$id}");
+    }
+
+    /**
+     * @param array<string, mixed> $data
+     */
+    public function updateFollowUp(int $id, array $data): ApiResponse
+    {
+        return $this->putSingle("connector/api/crm-follow-ups/{$id}", $data);
+    }
+
+    public function getFollowUpResources(): ApiResponse
+    {
+        return $this->getSingle('connector/api/crm-follow-up-resources', [], true);
+    }
+
+    // Leads
+
+    public function listLeads(array $params = []): ApiListResponse
+    {
+        return $this->getList('connector/api/crm-leads', $this->compact($params));
+    }
+
+    // Call Logs
+
+    /**
+     * @param array{
+     *   contact_id: int,
+     *   duration?: string,
+     *   note?: string,
+     *   result?: string
+     * } $data
+     */
+    public function saveCallLog(array $data): ActionResponse
+    {
+        return $this->postAction('connector/api/crm-call-logs', $data);
+    }
 }

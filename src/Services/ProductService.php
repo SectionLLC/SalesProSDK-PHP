@@ -1,68 +1,46 @@
 <?php
-/**
- * ============================================================================
- * FILE: src/Services/ProductService.php
- * Product Management - 4 Endpoints
- * ============================================================================
- */
 
 declare(strict_types=1);
 
-namespace SalesPro\SDK\Services;
+namespace ITechSection\SalesPro\Services;
 
-use SalesPro\SDK\SalesPro;
-use SalesPro\SDK\Interfaces\ServiceInterface;
-use SalesPro\SDK\Models\Product;
-use SalesPro\SDK\Models\PaginationResult;
-use SalesPro\SDK\Traits\RequestTrait;
-use SalesPro\SDK\Traits\ResponseTrait;
+use ITechSection\SalesPro\Http\ActionResponse;
+use ITechSection\SalesPro\Http\ApiListResponse;
+use ITechSection\SalesPro\Http\ApiResponse;
+// ── Product ───────────────────────────────────────────────────────────────────
 
-class ProductService implements ServiceInterface
+/**
+ * ProductService — Product catalog, variations, stock reports, and price groups.
+ *
+ * Docs: connector/api/product
+ *       connector/api/variation/{id}
+ *       connector/api/selling-price-group
+ *       connector/api/product-stock-report
+ */
+class ProductService extends AbstractService
 {
-    use RequestTrait, ResponseTrait;
-    
-    private SalesPro $client;
-    
-    public function __construct(SalesPro $client) { $this->client = $client; }
-    public function getClient(): SalesPro { return $this->client; }
-    
-    /**
-     * List products with filtering and pagination
-     */
-    public function list(array $filters = []): PaginationResult
+    public function list(array $params = []): ApiListResponse
     {
-        $endpoint = '/connector/api/list-products';
-        $response = $this->get($endpoint, $filters);
-        
-        return PaginationResult::fromResponse($response);
+        return $this->getList('connector/api/product', $this->compact($params), true);
     }
-    
-    /**
-     * Get single product by ID
-     */
-    public function find(int $productId): Product
+
+    public function get(int $id): ApiResponse
     {
-        $endpoint = "/connector/api/get-product/{$productId}";
-        $response = $this->get($endpoint);
-        
-        return Product::fromArray($response['data'] ?? []);
+        return $this->getSingle("connector/api/product/{$id}", [], true);
     }
-    
-    /**
-     * List product variations
-     */
-    public function variations(array $filters = []): array
+
+    public function listVariations(int $productId): ApiListResponse
     {
-        $endpoint = '/connector/api/variations';
-        return $this->get($endpoint, $filters);
+        return $this->getList("connector/api/variation/{$productId}", [], true);
     }
-    
-    /**
-     * List selling price groups
-     */
-    public function sellingPriceGroups(array $filters = []): array
+
+    public function listSellingPriceGroups(): ApiListResponse
     {
-        $endpoint = '/connector/api/selling-price-groups';
-        return $this->get($endpoint, $filters);
+        return $this->getList('connector/api/selling-price-group', [], true);
+    }
+
+    public function getStockReport(array $params = []): ApiListResponse
+    {
+        return $this->getList('connector/api/product-stock-report', $this->compact($params));
     }
 }

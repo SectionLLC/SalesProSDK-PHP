@@ -1,102 +1,69 @@
 <?php
-/**
- * ============================================================================
- * FILE: src/Services/UserService.php
- * User Management - 6 Endpoints
- * ============================================================================
- */
 
 declare(strict_types=1);
 
-namespace SalesPro\SDK\Services;
+namespace ITechSection\SalesPro\Services;
 
-use SalesPro\SDK\SalesPro;
-use SalesPro\SDK\Interfaces\ServiceInterface;
-use SalesPro\SDK\Models\User;
-use SalesPro\SDK\Models\PaginationResult;
-use SalesPro\SDK\Traits\RequestTrait;
-use SalesPro\SDK\Traits\ResponseTrait;
+use ITechSection\SalesPro\Http\ActionResponse;
+use ITechSection\SalesPro\Http\ApiListResponse;
+use ITechSection\SalesPro\Http\ApiResponse;
+// ── User ──────────────────────────────────────────────────────────────────────
 
-class UserService implements ServiceInterface
+/**
+ * UserService — User account management, password operations.
+ *
+ * Docs: connector/api/user
+ *       connector/api/user/loggedin
+ *       connector/api/user/registration
+ *       connector/api/update-password
+ *       connector/api/forget-password
+ */
+class UserService extends AbstractService
 {
-    use RequestTrait, ResponseTrait;
-    
-    private SalesPro $client;
-    
-    public function __construct(SalesPro $client) { $this->client = $client; }
-    public function getClient(): SalesPro { return $this->client; }
-    
-    /**
-     * Get current logged-in user profile
-     */
-    public function current(): User
+    public function getLoggedIn(): ApiResponse
     {
-        $response = $this->get('/connector/api/user');
-        return User::fromArray($response['data'] ?? []);
+        return $this->getSingle('connector/api/user/loggedin');
     }
-    
+
     /**
-     * List all users (admin only)
+     * @param array{
+     *   first_name: string,
+     *   last_name?: string,
+     *   username: string,
+     *   email: string,
+     *   password: string,
+     *   role?: string,
+     *   location_id?: int
+     * } $data
      */
-    public function list(array $filters = []): PaginationResult
+    public function register(array $data): ApiResponse
     {
-        return PaginationResult::fromResponse($this->get('/connector/api/users', $filters));
+        return $this->postSingle('connector/api/user/registration', $data);
     }
-    
-    /**
-     * Register new user account
-     */
-    public function register(array $userData): User
+
+    public function list(array $params = []): ApiListResponse
     {
-        // Validate required fields
-        $required = ['first_name', 'last_name', 'email', 'username', 'password'];
-        foreach ($required as $field) {
-            if (empty($userData[$field])) {
-                throw new \InvalidArgumentException("Missing required field: {$field}");
-            }
-        }
-        
-        $endpoint = '/connector/api/register';
-        $response = $this->post($endpoint, $userData);
-        
-        return User::fromArray($response['data'] ?? []);
+        return $this->getList('connector/api/user', $this->compact($params));
     }
-    
-    /**
-     * Get user by ID
-     */
-    public function find(int $userId): User
+
+    public function get(int $id): ApiResponse
     {
-        $response = $this->get("/connector/api/users/{$userId}");
-        return User::fromArray($response['data'] ?? []);
+        return $this->getSingle("connector/api/user/{$id}");
     }
-    
+
     /**
-     * Update user password
+     * @param array{user_id: int, password: string, confirm_password: string} $data
      */
-    public function updatePassword(string $currentPassword, string $newPassword): bool
+    public function updatePassword(array $data): ActionResponse
     {
-        $data = [
-            'current_password' => $currentPassword,
-            'password' => $newPassword,
-            'confirm_password' => $newPassword
-        ];
-        
-        try {
-            $this->put('/connector/api/users/update-password', [], $data);
-            return true;
-        } catch (\Exception $e) {
-            return false;
-        }
+        return $this->postAction('connector/api/update-password', $data);
     }
-    
+
     /**
-     * Recover forgotten password
+     * @param array{email: string} $data
      */
-    public function recoverPassword(string $usernameOrEmail): array
+    public function forgotPassword(array $data): ActionResponse
     {
-        return $this->post('/connector/api/recover-password', [
-            'username_or_email' => $usernameOrEmail
-        ]);
+        return $this->postAction('connector/api/forget-password', $data);
     }
 }

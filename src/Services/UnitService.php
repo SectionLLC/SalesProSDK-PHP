@@ -1,20 +1,28 @@
 <?php
 
-// ============================================================================
-// FILE: src/Services/UnitService.php
-// ============================================================================
+declare(strict_types=1);
 
-class UnitService implements ServiceInterface
+namespace ITechSection\SalesPro\Services;
+
+use ITechSection\SalesPro\Http\ActionResponse;
+use ITechSection\SalesPro\Http\ApiListResponse;
+use ITechSection\SalesPro\Http\ApiResponse;
+// ── Unit ──────────────────────────────────────────────────────────────────────
+
+/**
+ * UnitService — Units of measurement (kg, litre, pcs, etc.).
+ *
+ * Docs: connector/api/unit
+ */
+class UnitService extends AbstractService
 {
-    use RequestTrait, ResponseTrait;
-    private SalesPro $client;
-    
-    public function __construct(SalesPro $client) { $this->client = $client; }
-    public function getClient(): SalesPro { return $this->client; }
-    
-    /** List units */
-    public function list(): array { return $this->get('/connector/api/units'); }
-    
-    /** Get unit by ID */
-    public function find(int $unitId): array { return $this->get("/connector/api/units/{$unitId}"); }
+    public function list(): ApiListResponse
+    {
+        return $this->getList('connector/api/unit', [], true);
+    }
+
+    public function get(int $id): ApiResponse
+    {
+        return $this->getSingle("connector/api/unit/{$id}", [], true);
+    }
 }

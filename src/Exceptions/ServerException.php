@@ -1,15 +1,17 @@
 <?php
 
-// ============================================================================
-// FILE: src/Exceptions/ServerException.php
-// ============================================================================
+declare(strict_types=1);
 
-class ServerException extends ApiException
+namespace ITechSection\SalesPro\Exceptions;
+// ── Server Error ──────────────────────────────────────────────────────────────
+
+/**
+ * Thrown when the API returns a 5xx Server Error response.
+ */
+class ServerException extends SalesProException
 {
-    public function __construct(string $message = 'Server Error', int $code = 500)
+    public function __construct(int $statusCode, string $body = '')
     {
-        parent::__construct($message, $code);
-        $this->setHttpStatus(500);
-        $this->setUserMessage('An internal server error occurred');
+        parent::__construct("Server error ({$statusCode}): {$body}", null, $statusCode);
     }
 }

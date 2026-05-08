@@ -1,16 +1,18 @@
 <?php
 
+declare(strict_types=1);
 
-// ============================================================================
-// FILE: src/Exceptions/AuthenticationException.php
-// ============================================================================
+namespace ITechSection\SalesPro\Exceptions;
 
-class AuthenticationException extends ApiException
+// ── Authentication ────────────────────────────────────────────────────────────
+
+/**
+ * Thrown when a 401 Unauthorized response is received from the API.
+ */
+class AuthenticationException extends SalesProException
 {
-    public function __construct(string $message = 'Authentication Failed', int $code = 401)
+    public function __construct(string $message = 'Authentication failed.', ?array $apiError = null)
     {
-        parent::__construct($message, $code);
-        $this->setHttpStatus(401);
-        $this->setUserMessage('Invalid or expired authentication credentials');
+        parent::__construct($message, $apiError, 401);
     }
 }

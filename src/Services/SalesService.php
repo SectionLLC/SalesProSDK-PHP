@@ -1,151 +1,119 @@
 <?php
-/**
- * ============================================================================
- * FILE: src/Services/SalesService.php
- * Sales Management - 8 Endpoints - Complete CRUD with C#-Style Models
- * ============================================================================
- */
 
 declare(strict_types=1);
 
-namespace SalesPro\SDK\Services;
+namespace ITechSection\SalesPro\Services;
 
-use SalesPro\SDK\SalesPro;
-use SalesPro\SDK\Interfaces\ServiceInterface;
-use SalesPro\SDK\Models\Sell;
-use SalesPro\SDK\Models\PaginationResult;
-use SalesPro\SDK\Exceptions\ValidationException;
-use SalesPro\SDK\Traits\RequestTrait;
-use SalesPro\SDK\Traits\ResponseTrait;
+use ITechSection\SalesPro\Http\ActionResponse;
+use ITechSection\SalesPro\Http\ApiListResponse;
+use ITechSection\SalesPro\Http\ApiResponse;
+// ── Sales ─────────────────────────────────────────────────────────────────────
 
-class SalesService implements ServiceInterface
+/**
+ * SalesService — Full sell lifecycle: create, read, update, delete, returns, shipping.
+ *
+ * Docs: connector/api/sell
+ *       connector/api/sell-return
+ *       connector/api/list-sell-return
+ *       connector/api/update-shipping-status
+ */
+class SalesService extends AbstractService
 {
-    use RequestTrait, ResponseTrait;
-    
-    private SalesPro $client;
-    
-    public function __construct(SalesPro $client) { $this->client = $client; }
-    public function getClient(): SalesPro { return $this->client; }
-    
-    /**
-     * List sells with filtering
-     */
-    public function list(array $filters = []): PaginationResult
+    public function list(array $params = []): ApiListResponse
     {
-        $endpoint = '/connector/api/list-sells';
-        $response = $this->get($endpoint, $filters);
-        
-        return PaginationResult::fromResponse($response);
+        return $this->getList('connector/api/sell', $this->compact($params));
     }
-    
+
     /**
-     * Create new sell transaction
+     * Create a new sale (sell transaction).
+     *
+     * @param array{
+     *   location_id: int,
+     *   contact_id: int,
+     *   transaction_date: string,
+     *   status?: string,
+     *   payment_status?: string,
+     *   discount_type?: string,
+     *   discount_amount?: float,
+     *   tax_rate_id?: int,
+     *   shipping_charges?: float,
+     *   shipping_status?: string,
+     *   shipping_details?: string,
+     *   delivered_to?: string,
+     *   sell_lines: array<int, array{
+     *     product_id: int,
+     *     variation_id?: int,
+     *     quantity: float,
+     *     unit_price?: float,
+     *     line_discount_type?: string,
+     *     line_discount_amount?: float,
+     *     tax_id?: int,
+     *     sell_line_note?: string
+     *   }>,
+     *   payments?: array<int, array{
+     *     method: string,
+     *     amount: float,
+     *     card_transaction_number?: string,
+     *     note?: string,
+     *     account_id?: int
+     *   }>
+     * } $data
      */
-    public function create(array $data): Sell
+    public function create(array $data): ApiResponse
     {
-        $this->validateCreateData($data);
-        
-        $endpoint = '/connector/api/create-sell';
-        $response = $this->post($endpoint, $data);
-        
-        return Sell::fromArray($response['data'] ?? []);
+        return $this->postSingle('connector/api/sell', $data);
     }
-    
-    /**
-     * Get single sell by ID
-     */
-    public function find(int $sellId): Sell
+
+    public function get(int $id): ApiResponse
     {
-        $endpoint = "/connector/api/get-sell/{$sellId}";
-        $response = $this->get($endpoint);
-        
-        return Sell::fromArray($response['data'] ?? []);
+        return $this->getSingle("connector/api/sell/{$id}");
     }
-    
+
     /**
-     * Update existing sell
+     * @param array<string, mixed> $data
      */
-    public function update(int $sellId, array $data): Sell
+    public function update(int $id, array $data): ApiResponse
     {
-        $endpoint = "/connector/api/update-sell/{$sellId}";
-        $response = $this->put($endpoint, $sellId, $data);
-        
-        return Sell::fromArray($data['data'] ?? []);
+        return $this->putSingle("connector/api/sell/{$id}", $data);
     }
-    
-    /**
-     * Delete a sell
-     */
-    public function delete(int $sellId): bool
+
+    public function delete(int $id): ActionResponse
     {
-        try {
-            $this->delete("/connector/api/delete-sell/{$sellId}");
-            return true;
-        } catch (\Exception $e) {
-            return false;
-        }
+        return $this->deleteSingle("connector/api/sell/{$id}");
     }
-    
+
     /**
-     * Add sell return
+     * Record a sell return / credit note.
+     *
+     * @param array{
+     *   transaction_id: int,
+     *   transaction_date?: string,
+     *   return_lines: array<int, array{sell_line_id: int, quantity: float}>,
+     *   payments?: array<int, array{method: string, amount: float}>
+     * } $data
      */
-    public function addReturn(int $sellId, array $returnData): array
+    public function addReturn(array $data): ApiResponse
     {
-        $endpoint = '/connector_api/sell-return';
-        $data = array_merge(['transaction_id' => $sellId], $returnData);
-        
-        return $this->post($endpoint, $data);
+        return $this->postSingle('connector/api/sell-return', $data);
     }
-    
-    /**
-     * List sell returns
-     */
-    public function listReturns(array $filters = []): array
+
+    public function listReturns(array $params = []): ApiListResponse
     {
-        return $this->get('/connector_api/sell-return', $filters);
+        return $this->getList('connector/api/list-sell-return', $this->compact($params));
     }
-    
+
     /**
-     * Update shipping status
+     * Update the shipping status of a transaction.
+     *
+     * @param array{
+     *   transaction_id: int,
+     *   shipping_status: string,
+     *   shipping_details?: string,
+     *   delivered_to?: string
+     * } $data
      */
-    public function updateShippingStatus(int $sellId, string $status, ?string $trackingNumber = null): array
+    public function updateShippingStatus(array $data): ActionResponse
     {
-        $endpoint = '/connector_api/update-shipping-status';
-        $data = [
-            'transaction_id' => $sellId,
-            'shipping_status' => $status,
-            'tracking_number' => $trackingNumber
-        ];
-        
-        return $this->post($endpoint, $data);
-    }
-    
-    /**
-     * Validate create sell data
-     */
-    private function validateCreate(array $data): void
-    {
-        if (!isset($data['products']) || empty($data['products'])) {
-            throw new ValidationException('Products array is required', 422, ['products' => ['Products array is required']]);
-        }
-        
-        if (!isset($data['payment']) || empty($data['payment'])) {
-            throw new ValidationException('Payment array is required', 422, ['payment' => ['Payment array is required']]);
-        }
-        
-        // Validate location_id
-        if (!isset($data['location_id']) || empty($data['location_id'])) {
-            throw new ValidationException('Location ID is required', 422, ['location_id' => ['Location ID is required']]);
-        }
-        
-        foreach ($data['products'] as $i => $product) {
-            if (!isset($product['product_id'])) {
-                throw new ValidationException("Product #{$i}: product_id is required", 422, ["products.{$i}" => ["product_id is required"]]);
-            }
-            
-            if (!isset($product['quantity'])) {
-                throw new ValidationException("Product #{$i}: quantity is required", 422, ["products.{$i}" => ["quantity is required"]]);
-            }
-        }
+        return $this->postAction('connector/api/update-shipping-status', $data);
     }
 }

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.0/phpunit.xsd"
+         bootstrap="vendor/autoload.php"
+         colors="true"
+         stopOnFailure="false"
+         displayDetailsOnIncompleteTests="true"
+         displayDetailsOnSkippedTests="true">
+
+    <testsuites>
+        <testsuite name="SalesPro SDK">
+            <directory>tests</directory>
+        </testsuite>
+    </testsuites>
+
+    <coverage>
+        <include>
+            <directory suffix=".php">src</directory>
+        </include>
+        <report>
+            <html outputDirectory="coverage"/>
+            <clover outputFile="coverage/clover.xml"/>
+        </report>
+    </coverage>
+
+    <php>
+        <env name="SALESPRO_BASE_URL" value="https://salespro.itechsection.com/"/>
+        <env name="SALESPRO_CLIENT_ID" value="test-client"/>
+        <env name="SALESPRO_CLIENT_SECRET" value="test-secret"/>
+    </php>
+
+</phpunit>

@@ -1,20 +1,29 @@
 <?php
 
-// ============================================================================
-// FILE: src/Services/SuperadminService.php
-// ============================================================================
+declare(strict_types=1);
 
-class SuperadminService implements ServiceInterface
+namespace ITechSection\SalesPro\Services;
+
+use ITechSection\SalesPro\Http\ActionResponse;
+use ITechSection\SalesPro\Http\ApiListResponse;
+use ITechSection\SalesPro\Http\ApiResponse;
+// ── Superadmin ────────────────────────────────────────────────────────────────
+
+/**
+ * SuperadminService — SaaS subscription and package management.
+ *
+ * Docs: connector/api/active-subscription
+ *       connector/api/packages
+ */
+class SuperadminService extends AbstractService
 {
-    use RequestTrait, ResponseTrait;
-    private SalesPro $client;
-    
-    public function __construct(SalesPro $client) { $this->client = $client; }
-    public function getClient(): SalesPro { return $this->client; }
-    
-    /** Get subscription details */
-    public function subscriptionDetails(): array { return $this->get('/connector/api/superadmin/subscription'); }
-    
-    /** Get package list */
-    public function packages(): array { return $this->get('/connector/api/superadmin/packages'); }
+    public function getActiveSubscription(): ApiResponse
+    {
+        return $this->getSingle('connector/api/active-subscription');
+    }
+
+    public function getPackages(): ApiListResponse
+    {
+        return $this->getList('connector/api/packages', [], true);
+    }
 }

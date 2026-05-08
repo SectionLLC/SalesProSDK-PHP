@@ -1,20 +1,29 @@
 <?php
 
-// ============================================================================
-// FILE: src/Services/BrandService.php
-// ============================================================================
+declare(strict_types=1);
 
-class BrandService implements ServiceInterface
+namespace ITechSection\SalesPro\Services;
+
+use ITechSection\SalesPro\Http\ActionResponse;
+use ITechSection\SalesPro\Http\ApiListResponse;
+use ITechSection\SalesPro\Http\ApiResponse;
+
+// ── Brand ─────────────────────────────────────────────────────────────────────
+
+/**
+ * BrandService — Product brand catalog.
+ *
+ * Docs: connector/api/brand
+ */
+class BrandService extends AbstractService
 {
-    use RequestTrait, ResponseTrait;
-    private SalesPro $client;
-    
-    public function __construct(SalesPro $client) { $this->client = $client; }
-    public function getClient(): SalesPro { return $this->client; }
-    
-    /** List brands */
-    public function list(): array { return $this->get('/connector/api/list-brands'); }
-    
-    /** Get brand by ID */
-    public function find(int $brandId): array { return $this->get("/connector/api/get-brand/{$brandId}"); }
+    public function list(): ApiListResponse
+    {
+        return $this->getList('connector/api/brand', [], true);
+    }
+
+    public function get(string $id): ApiListResponse
+    {
+        return $this->getList("connector/api/brand/{$id}", [], true);
+    }
 }

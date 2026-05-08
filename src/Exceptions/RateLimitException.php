@@ -1,21 +1,29 @@
 <?php
 
-// ============================================================================
-// FILE: src/Exceptions/RateLimitException.php
-// ============================================================================
+declare(strict_types=1);
 
-class RateLimitException extends ApiException
+namespace ITechSection\SalesPro\Exceptions;
+// ── Rate Limit ────────────────────────────────────────────────────────────────
+
+/**
+ * Thrown when the API returns a 429 Too Many Requests response.
+ */
+class RateLimitException extends SalesProException
 {
-    /** @var int Seconds to wait before retrying */
-    private int $retryAfter = 60;
-    
-    public function __construct(string $message = 'Rate Limit Exceeded', int $code = 429)
+    private ?int $retryAfter;
+
+    public function __construct(?int $retryAfterSeconds = null)
     {
-        parent::__construct($message, $code);
-        $this->setHttpStatus(429);
-        $this->setUserMessage('Too many requests. Please wait and try again.');
+        $this->retryAfter = $retryAfterSeconds;
+        $msg = 'Rate limit exceeded.';
+        if ($retryAfterSeconds !== null) {
+            $msg .= " Retry after {$retryAfterSeconds} seconds.";
+        }
+        parent::__construct($msg, null, 429);
     }
-    
-    public function setRetryAfter(int $seconds): self { $this->retryAfter = $seconds; return $this; }
-    public function getRetryAfter(): int { return $this->retryAfter; }
+
+    public function getRetryAfter(): ?int
+    {
+        return $this->retryAfter;
+    }
 }

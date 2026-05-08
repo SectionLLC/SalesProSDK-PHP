@@ -1,15 +1,17 @@
 <?php
 
-// ============================================================================
-// FILE: src/Exceptions/NetworkException.php
-// ============================================================================
+declare(strict_types=1);
 
-class NetworkException extends ApiException
+namespace ITechSection\SalesPro\Exceptions;
+// ── Network ───────────────────────────────────────────────────────────────────
+
+/**
+ * Thrown when a network-level failure occurs (timeout, DNS failure, etc.).
+ */
+class NetworkException extends SalesProException
 {
-    public function __construct(string $message = 'Network Error', int $code = 0)
+    public function __construct(string $message, \Throwable $previous)
     {
-        parent::__construct($message, $code);
-        $this->setHttpStatus(503);
-        $this->setUserMessage('Unable to connect to the server. Please check your network connection.');
+        parent::__construct($message, null, 0, $previous);
     }
 }

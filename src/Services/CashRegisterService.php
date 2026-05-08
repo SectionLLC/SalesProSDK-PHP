@@ -1,23 +1,36 @@
 <?php
 
-// ============================================================================
-// FILE: src/Services/CashRegisterService.php
-// ============================================================================
+declare(strict_types=1);
 
-class CashRegisterService implements ServiceInterface
+namespace ITechSection\SalesPro\Services;
+
+use ITechSection\SalesPro\Http\ActionResponse;
+use ITechSection\SalesPro\Http\ApiListResponse;
+use ITechSection\SalesPro\Http\ApiResponse;
+// ── Cash Register ─────────────────────────────────────────────────────────────
+
+/**
+ * CashRegisterService — POS till management.
+ *
+ * Docs: connector/api/cash-register
+ */
+class CashRegisterService extends AbstractService
 {
-    use RequestTrait, ResponseTrait;
-    private SalesPro $client;
-    
-    public function __construct(SalesPro $client) { $this->client = $client; }
-    public function getClient(): SalesPro { return $this->client; }
-    
-    /** List registers */
-    public function list(): array { return $this->get('/connector/api/cash-registers'); }
-    
-    /** Create register */
-    public function create(array $data): array { return $this->post('/connector/api/cash-registers', $data); }
-    
-    /** Get register by ID */
-    public function find(int $registerId): array { return $this->get("/connector/api/cash-registers/{$registerId}"); }
+    public function list(): ApiListResponse
+    {
+        return $this->getList('connector/api/cash-register');
+    }
+
+    /**
+     * @param array{location_id: int, closing_amount: float, closing_note?: string} $data
+     */
+    public function create(array $data): ApiResponse
+    {
+        return $this->postSingle('connector/api/cash-register', $data);
+    }
+
+    public function get(int $id): ApiResponse
+    {
+        return $this->getSingle("connector/api/cash-register/{$id}");
+    }
 }

@@ -1,51 +1,66 @@
 <?php
-/**
- * ============================================================================
- * FILE: src/Services/ExpenseService.php
- * Expense Management - 6 Endpoints
- * ============================================================================
- */
 
 declare(strict_types=1);
 
-namespace SalesPro\SDK\Services;
+namespace ITechSection\SalesPro\Services;
 
-use SalesPro\SDK\SalesPro;
-use SalesPro\SDK\Interfaces\ServiceInterface;
-use SalesPro\SDK\Models\Expense;
-use SalesPro\SDK\Models\PaginationResult;
-use SalesPro\SDK\Traits\RequestTrait;
-use SalesPro\SDK\Traits\ResponseTrait;
+use ITechSection\SalesPro\Http\ActionResponse;
+use ITechSection\SalesPro\Http\ApiListResponse;
+use ITechSection\SalesPro\Http\ApiResponse;
+// ── Expense ───────────────────────────────────────────────────────────────────
 
-class ExpenseService implements ServiceInterface
+/**
+ * ExpenseService — Expense CRUD, refunds, and categories.
+ *
+ * Docs: connector/api/expense
+ *       connector/api/expense-refund
+ *       connector/api/expense-categories
+ */
+class ExpenseService extends AbstractService
 {
-    use RequestTrait, ResponseTrait;
-    
-    private SalesPro $client;
-    
-    public function __construct(SalesPro $client) { $this->client = $client; }
-    public function getClient(): SalesPro { return $this->client; }
-    
-    /** List expenses */
-    public function list(array $filters = []): PaginationResult { return PaginationResult::fromResponse($this->get('/connector/api/expenses', $filters)); }
-    
-    /** Create expense */
-    public function create(array $data): Expense { $this->validate($data); return Expense::fromArray($this->post('/connector/api/expenses', $data)['data'] ?? []); }
-    
-    /** Get expense by ID */
-    public function find(int $id): Expense { return Expense::fromArray($this->get("/connector/api/expenses/{$id}")['data'] ?? []); }
-    
-    /** Update expense */
-    public function update(int $id, array $data): Expense { $this->put("/connector/api/expenses/{$id}", $id, $data); return Expense::fromArray($data); }
-    
-    /** List refunds */
-    public function listRefunds(array $filters = []): array { return $this->get('/connector/api/expense-refunds', $filters); }
-    
-    /** List categories */
-    public function categories(): array { return $this->get('/connector/api/expense-categories'); }
-    
-    private function validate(array $data): void {
-        if (!isset($data['final_total'])) throw new \InvalidArgumentException('final_total is required');
-        if (!isset($data['expense_category_id'])) throw new \InvalidArgumentException('expense_category_id is required');
+    public function list(array $params = []): ApiListResponse
+    {
+        return $this->getList('connector/api/expense', $this->compact($params));
+    }
+
+    /**
+     * @param array{
+     *   location_id: int,
+     *   expense_category_id: int,
+     *   final_total: float,
+     *   transaction_date?: string,
+     *   note?: string,
+     *   ref_no?: string,
+     *   tax_id?: int,
+     *   payment_method?: string,
+     *   account_id?: int
+     * } $data
+     */
+    public function create(array $data): ApiResponse
+    {
+        return $this->postSingle('connector/api/expense', $data);
+    }
+
+    public function get(int $id): ApiResponse
+    {
+        return $this->getSingle("connector/api/expense/{$id}");
+    }
+
+    /**
+     * @param array<string, mixed> $data
+     */
+    public function update(int $id, array $data): ApiResponse
+    {
+        return $this->putSingle("connector/api/expense/{$id}", $data);
+    }
+
+    public function listRefunds(array $params = []): ApiListResponse
+    {
+        return $this->getList('connector/api/expense-refund', $this->compact($params));
+    }
+
+    public function listCategories(): ApiListResponse
+    {
+        return $this->getList('connector/api/expense-categories', [], true);
     }
 }

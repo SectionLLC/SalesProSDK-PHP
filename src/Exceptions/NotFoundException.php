@@ -1,16 +1,17 @@
 <?php
 
+declare(strict_types=1);
 
-// ============================================================================
-// FILE: src/Exceptions/NotFoundException.php
-// ============================================================================
+namespace ITechSection\SalesPro\Exceptions;
+// ── Not Found ─────────────────────────────────────────────────────────────────
 
-class NotFoundException extends ApiException
+/**
+ * Thrown when a 404 Not Found response is received.
+ */
+class NotFoundException extends SalesProException
 {
-    public function __construct(string $message = 'Resource Not Found', int $code = 404)
+    public function __construct(string $message = 'Resource not found.')
     {
-        parent::__construct($message, $code);
-        $this->setHttpStatus(404);
-        $this->setUserMessage('The requested resource was not found');
+        parent::__construct($message, null, 404);
     }
 }

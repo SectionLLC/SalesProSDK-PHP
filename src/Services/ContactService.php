@@ -1,77 +1,91 @@
 <?php
-/**
- * ============================================================================
- * FILE: src/Services/ContactService.php
- * Contact Management - 5 Endpoints
- * ============================================================================
- */
 
 declare(strict_types=1);
 
-namespace SalesPro\SDK\Services;
+namespace ITechSection\SalesPro\Services;
 
-use SalesPro\SDK\SalesPro;
-use SalesPro\SDK\Interfaces\ServiceInterface;
-use SalesPro\SDK\Models\Contact;
-use SalesPro\SDK\Models\PaginationResult;
-use SalesPro\SDK\Traits\RequestTrait;
-use SalesPro\SDK\Traits\ResponseTrait;
+use ITechSection\SalesPro\Http\ActionResponse;
+use ITechSection\SalesPro\Http\ApiListResponse;
+use ITechSection\SalesPro\Http\ApiResponse;
+// ── Contact ───────────────────────────────────────────────────────────────────
 
-class ContactService implements ServiceInterface
+/**
+ * ContactService — Customer / supplier CRUD and payment recording.
+ *
+ * Docs: connector/api/contactapi
+ */
+class ContactService extends AbstractService
 {
-    use RequestTrait, ResponseTrait;
-    
-    private SalesPro $client;
-    
-    public function __construct(SalesPro $client) { $this->client = $client; }
-    public function getClient(): SalesPro { return $this->client; }
-    
     /**
-     * List contacts with filtering
+     * @param array{page?: int, per_page?: int, type?: string} $params
      */
-    public function list(array $filters = []): PaginationResult
+    public function list(array $params = []): ApiListResponse
     {
-        return PaginationResult::fromResponse($this->get('/connector/api/contact', $filters));
+        return $this->getList('connector/api/contactapi', $this->compact($params));
     }
-    
+
     /**
-     * Create new contact (customer/supplier)
+     * Create a new contact (customer or supplier).
+     *
+     * @param array{
+     *   type: string,
+     *   first_name: string,
+     *   last_name?: string,
+     *   supplier_business_name?: string,
+     *   email?: string,
+     *   mobile?: string,
+     *   address_line_1?: string,
+     *   address_line_2?: string,
+     *   city?: string,
+     *   state?: string,
+     *   country?: string,
+     *   zip_code?: string,
+     *   tax_number?: string,
+     *   credit_limit?: float,
+     *   opening_balance?: float,
+     *   pay_term_number?: int,
+     *   pay_term_type?: string,
+     *   customer_group_id?: int,
+     *   custom_field1?: string,
+     *   custom_field2?: string,
+     *   custom_field3?: string,
+     *   custom_field4?: string
+     * } $data
      */
-    public function create(array $data): Contact
+    public function create(array $data): ApiResponse
     {
-        // Set default type if not provided
-        if (!isset($data['type'])) $data['type'] = 'customer';
-        
-        $response = $this->post('/connector/api/contact', $data);
-        return Contact::fromArray($response['data'] ?? []);
+        return $this->postSingle('connector/api/contactapi', $data);
     }
-    
-    /**
-     * Get contact by ID
-     */
-    public function find(int $contactId): Contact
+
+    public function get(int $id): ApiResponse
     {
-        $response = $this->get("/connector/api/contact/{$contactId}");
-        return Contact::fromArray($response['data'] ?? []);
+        return $this->getSingle("connector/api/contactapi/{$id}");
     }
-    
+
     /**
-     * Update contact
+     * Update an existing contact.
+     *
+     * @param array<string, mixed> $data
      */
-    public function update(int $contactId, array $data): Contact
+    public function update(int $id, array $data): ApiResponse
     {
-        $this->put("/connector/api/contact/{$contactId}", $contactId, $data);
-        return Contact::fromArray($data);
+        return $this->putSingle("connector/api/contactapi/{$id}", $data);
     }
-    
+
     /**
-     * Record payment for contact
+     * Record a payment against a contact's balance.
+     *
+     * @param array{
+     *   contact_id: int,
+     *   amount: float,
+     *   method: string,
+     *   paid_on?: string,
+     *   note?: string,
+     *   account_id?: int
+     * } $data
      */
-    public function recordPayment(int $contactId, array $paymentData): array
+    public function addPayment(array $data): ActionResponse
     {
-        $endpoint = '/connector/api/contact/payment';
-        $data = array_merge(['contact_id' => $contactId], $paymentData);
-        
-        return $this->post($endpoint, $data);
+        return $this->postAction('connector/api/contactapi/payment', $data);
     }
 }
