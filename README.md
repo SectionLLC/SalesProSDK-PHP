@@ -361,6 +361,14 @@ vendor/bin/phpunit
 
 ---
 
+## How To Use
+
+```bash
+composer require itechsection/salesprosdk
+```
+
+---
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
