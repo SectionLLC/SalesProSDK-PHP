@@ -8,7 +8,7 @@ Enterprise-grade PHP SDK for the **SalesPro / SectionERP API** with first-class 
 
 ---
 
-## Features
+## Features V 1.0.0
 
 - ✅ Full coverage of every SalesPro API endpoint
 - ✅ OAuth2 password-grant token management with auto-refresh
