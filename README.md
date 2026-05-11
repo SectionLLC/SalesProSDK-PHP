@@ -40,7 +40,7 @@ Enterprise-grade PHP SDK for the **SalesPro / SectionERP API** with first-class 
 ## Installation
 
 ```bash
-composer require itechsection/salespro-sdk
+composer require itechsection/salesprosdk
 ```
 
 ---
