@@ -3,7 +3,7 @@
     "description": "Enterprise-grade PHP SDK for the SalesPro / SectionERP API — with full CodeIgniter 3 & 4 integration",
     "type": "library",
     "license": "MIT",
-    "version": "1.0.0",
+    "version": "1.0.3",
     "keywords": [
         "salespro",
         "itechsection",
